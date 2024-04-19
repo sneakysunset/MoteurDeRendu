@@ -3,25 +3,37 @@
 int main()
 {
     // Initialisation
-
     gl::init("TPs de Rendering"); 
-        auto const triangle_mesh = gl::Mesh{{
+    //gl::maximize_window(); 
+    
+    auto const shader = gl::Shader{{
+    .vertex   = gl::ShaderSource::File{"res/vertex.glsl"},
+    .fragment = gl::ShaderSource::File{"res/fragment.glsl"},
+    }};
+
+    auto const rectangle_mesh = gl::Mesh{{
     .vertex_buffers = {{
         .layout = {gl::VertexAttribute::Position2D{0}},
         .data   = {
-                -1.f, -1.f, 
-                +1.f, -1.f, 
-                0.f, +1.f 
+                -0.5f, -0.5f, 
+                +0.5f, -0.5f,
+                +0.5f, +0.5f,
+                -0.5f, +0.5f
             },
         }},
+        .index_buffer = {
+            0, 1, 2,
+            0, 2, 3
+        }
     }};
-    gl::maximize_window(); 
+
+
 
     while (gl::window_is_open())
     {
-        glClearColor(0.f, 0.f, 1.f, 1.f);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
-        gl::bind_default_shader(); 
-        triangle_mesh.draw(); 
+        shader.bind(); 
+        rectangle_mesh.draw(); 
     }
 }
