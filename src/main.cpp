@@ -31,7 +31,7 @@ int main()
 
     while (gl::window_is_open())
     {
-        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClearColor(0.f, 0.f, 1.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
         shader.bind(); 
         rectangle_mesh.draw(); 
