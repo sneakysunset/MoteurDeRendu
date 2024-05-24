@@ -1,16 +1,13 @@
 #version 410
 
 out vec4 out_color;
-uniform vec4 output_color;
-uniform float time;
 uniform sampler2D my_texture;
-in vec3 vertex_position;
 in vec2 uv;
 void main()
 {
     vec4 texture_color = texture(my_texture, uv);
     out_color = texture_color;
-    
+
     // ***** circle *****
     //float uv_distance = distance(uv , vec2(.5)) * 2;
     //uv_distance = step(.5, uv_distance);

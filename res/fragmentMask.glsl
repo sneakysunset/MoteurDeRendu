@@ -1,9 +1,10 @@
 #version 410
 
 out vec4 out_color;
-uniform float time;
-
+uniform sampler2D my_texture;
+in vec2 uv;
 void main()
 {
-    out_color = vec4(0.f, 0.f, 1.f, .02f);
+    vec4 texture_color = texture(my_texture, uv);
+    out_color = texture_color;
 }

@@ -13,24 +13,53 @@ int main()
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
     auto camera = gl::Camera();
     gl::set_events_callbacks({camera.events_callbacks()});
-    glm::mat4 const view_matrix = camera.view_matrix();
-    glm::mat4 const projection_matrix = glm::infinitePerspective(1.f /*field of view in radians*/, gl::framebuffer_aspect_ratio() /*aspect ratio*/, 0.001f /*near plane*/);
-
-
+    
     auto const shader = gl::Shader{{
     .vertex   = gl::ShaderSource::File{"res/vertex.glsl"},
     .fragment = gl::ShaderSource::File{"res/fragment.glsl"},
     }};
 
-    auto const shaderMask = gl::Shader{{
+    auto const shader_camera = gl::Shader{{
     .vertex   = gl::ShaderSource::File{"res/vertexMask.glsl"},
     .fragment = gl::ShaderSource::File{"res/fragmentMask.glsl"},
     }};
 
 
+    auto render_target = gl::RenderTarget{ gl::RenderTarget_Descriptor{
+    .width = gl::framebuffer_width_in_pixels(),
+    .height = gl::framebuffer_height_in_pixels(),
+    .color_textures = {
+        gl::ColorAttachment_Descriptor{
+            .format = gl::InternalFormat_Color::RGBA8,
+            .options = {
+                .minification_filter = gl::Filter::NearestNeighbour, // On va toujours afficher la texture à la taille de l'écran,
+                .magnification_filter = gl::Filter::NearestNeighbour, // donc les filtres n'auront pas d'effet. Tant qu'à faire on choisit le moins coûteux.
+                .wrap_x = gl::Wrap::ClampToEdge,
+                .wrap_y = gl::Wrap::ClampToEdge,
+            },
+        },
+    },
+    .depth_stencil_texture = gl::DepthStencilAttachment_Descriptor{
+        .format = gl::InternalFormat_DepthStencil::Depth32F,
+        .options = {
+            .minification_filter = gl::Filter::NearestNeighbour,
+            .magnification_filter = gl::Filter::NearestNeighbour,
+            .wrap_x = gl::Wrap::ClampToEdge,
+            .wrap_y = gl::Wrap::ClampToEdge,
+        },
+    },
+} };
+
+    gl::set_events_callbacks({
+    camera.events_callbacks(),
+    {.on_framebuffer_resized = [&](gl::FramebufferResizedEvent const& e) {
+        render_target.resize(e.width_in_pixels, e.height_in_pixels);
+    }},
+        });
+
     shader.bind(); 
-    shader.set_uniform("output_color", glm::vec4(1.f, .78f, .11f, 1.f));
-    auto const rectangle_mesh = gl::Mesh{ {
+
+    auto const cube_mesh = gl::Mesh{ {
         .vertex_buffers = {{
             .layout = {gl::VertexAttribute::Position3D{0}, gl::VertexAttribute::Position2D{1}},
             .data = {
@@ -112,15 +141,21 @@ int main()
         .wrap_y = gl::Wrap::Repeat,   // Idem, mais sur l'axe Y. En général on met le même wrap mode sur les deux axes.
     }
     };
-    shader.set_uniform("my_texture", texture);
-    auto const rectangle_mask = gl::Mesh{{
+
+
+  
+
+
+    shader_camera.bind();
+    shader_camera.set_uniform("my_texture", render_target.color_texture(0));
+    auto const camera_rect = gl::Mesh{{
     .vertex_buffers = {{
-        .layout = {gl::VertexAttribute::Position2D{0}},
+        .layout = {gl::VertexAttribute::Position2D{0}, gl::VertexAttribute::Position2D{1}},
         .data   = {
-                -3.f, -3.f, 
-                +3.f, -3.f,
-                +3.f, +3.f,
-                -3.f, +3.f
+                -1.f, -1.f, 0, 0, 
+                +1.f, -1.f, 1, 0,
+                +1.f, +1.f, 1, 1,
+                -1.f, +1.f, 0, 1
             },
         }},
         .index_buffer = {
@@ -132,6 +167,7 @@ int main()
     int i = 0;
     while (gl::window_is_open())
     {
+
        // i++;
        // if(i%5 == 0){
         //shader.bind(); 
@@ -140,15 +176,25 @@ int main()
         //shaderMask.bind();
         //rectangle_mask.draw();
         //}
-        glm::mat4 const view_matrix = camera.view_matrix();
-        glm::mat4 const projection_matrix = glm::infinitePerspective(1.f /*field of view in radians*/, gl::framebuffer_aspect_ratio() /*aspect ratio*/, 0.001f /*near plane*/);
-        shader.set_uniform("view_matrix", glm::mat4(projection_matrix * view_matrix));
-        glClearColor(0.f, 0.f, 1.f, 1.f);
+
+
+
+        render_target.render([&]() 
+        {
+            glClearColor(1.f, 0.f, 0.f, 1.f); // Dessine du rouge, non pas à l'écran, mais sur notre render target
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glm::mat4 const view_matrix = camera.view_matrix();
+            glm::mat4 const projection_matrix = glm::infinitePerspective(1.f /*field of view in radians*/, gl::framebuffer_aspect_ratio() /*aspect ratio*/, 0.001f /*near plane*/);
+            shader.bind();
+            shader.set_uniform("view_matrix", glm::mat4(projection_matrix* view_matrix));
+            shader.set_uniform("my_texture", texture);
+            cube_mesh.draw();
+        });
+
+        glClearColor(0.f, 0.f, 1.f, 1.f); 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        shader.bind();
-        shader.set_uniform("screen_ratio", float(gl::framebuffer_aspect_ratio()));
-        rectangle_mesh.draw();
-
-
+        shader_camera.bind();
+        shader_camera.set_uniform("my_texture", render_target.color_texture(0));
+        camera_rect.draw();
     }
 }
