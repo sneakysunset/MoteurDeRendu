@@ -5,6 +5,7 @@ int main()
     // Initialisation
     gl::init("TPs de Rendering"); 
     gl::maximize_window(); 
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
     auto camera = gl::Camera();
@@ -29,16 +30,16 @@ int main()
     shader.set_uniform("output_color", glm::vec4(1.f, .78f, .11f, 1.f));
     auto const rectangle_mesh = gl::Mesh{{
     .vertex_buffers = {{
-        .layout = {gl::VertexAttribute::Position3D{0}},
+        .layout = {gl::VertexAttribute::Position3D{0}, gl::VertexAttribute::Position2D{1}},
         .data   = {
-        -1, -1,  1, //0
-         1, -1,  1, //1
-        -1,  1,  1, //2
-         1,  1,  1, //3
-        -1, -1, -1, //4
-         1, -1, -1, //5
-        -1,  1, -1, //6
-         1,  1, -1  //7
+        -1, -1,  1, 0, 0, //0
+         1, -1,  1, 1, 0, //1
+        -1,  1,  1, 0, 1, //2
+         1,  1,  1, 1, 1,  //3
+        -1, -1, -1, 0, 0, //4
+         1, -1, -1, 1, 0, //5
+        -1,  1, -1, 0, 1, //6
+         1,  1, -1, 1, 1  //7
             },
         }},
         .index_buffer = {
@@ -99,7 +100,7 @@ int main()
         glm::mat4 const projection_matrix = glm::infinitePerspective(1.f /*field of view in radians*/, gl::framebuffer_aspect_ratio() /*aspect ratio*/, 0.001f /*near plane*/);
         shader.set_uniform("view_matrix", glm::mat4(projection_matrix * view_matrix));
         glClearColor(0.f, 0.f, 1.f, 1.f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader.bind();
         shader.set_uniform("screen_ratio", float(gl::framebuffer_aspect_ratio()));
         rectangle_mesh.draw();
