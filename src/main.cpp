@@ -1,6 +1,7 @@
 
 #include "opengl-framework/opengl-framework.hpp" // Inclue la librairie qui va nous servir à faire du rendu
 #include "glm/ext/matrix_clip_space.hpp"
+#include "../opengl-framework/lib/glfw/include/GLFW/glfw3.h"
 
 
 int main()
@@ -181,7 +182,7 @@ int main()
 
         render_target.render([&]() 
         {
-            glClearColor(1.f, 0.f, 0.f, 1.f); // Dessine du rouge, non pas à l'écran, mais sur notre render target
+            glClearColor(.5f, .5f, .5f, 1.f); // Dessine du rouge, non pas à l'écran, mais sur notre render target
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glm::mat4 const view_matrix = camera.view_matrix();
             glm::mat4 const projection_matrix = glm::infinitePerspective(1.f /*field of view in radians*/, gl::framebuffer_aspect_ratio() /*aspect ratio*/, 0.001f /*near plane*/);
@@ -195,6 +196,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader_camera.bind();
         shader_camera.set_uniform("my_texture", render_target.color_texture(0));
+        shader_camera.set_uniform("time", float(gl::time_in_seconds()));
         camera_rect.draw();
     }
 }
