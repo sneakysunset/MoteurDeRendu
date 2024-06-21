@@ -17,9 +17,11 @@ void main()
     //gl_Position = view_matrix * vec4(pos, 0., 1.);
     uv = in_uv ;
 
+
+    
     //uv.x = uv.x - .5;
     //uv.x = abs(uv.x);
     //uv.y = uv.y - .5;
     //uv.y = abs(uv.y);
-    gl_Position = view_matrix * vec4(in_position.x, in_position.y, in_position.z, 1.);
+    gl_Position = view_matrix * vec4(in_position.x + cos(time) / 2, in_position.y + sin(time) / 2, in_position.z, 1.);
 }

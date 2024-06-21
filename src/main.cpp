@@ -25,13 +25,17 @@ int main()
     .fragment = gl::ShaderSource::File{"res/fragmentMask.glsl"},
     }};
 
+    auto const shader_fader = gl::Shader{ {
+        .vertex = gl::ShaderSource::File{"res/vertexFader.glsl"},
+        .fragment = gl::ShaderSource::File{"res/fragmentFader.glsl"},
+        } };
 
     auto render_target = gl::RenderTarget{ gl::RenderTarget_Descriptor{
     .width = gl::framebuffer_width_in_pixels(),
     .height = gl::framebuffer_height_in_pixels(),
     .color_textures = {
         gl::ColorAttachment_Descriptor{
-            .format = gl::InternalFormat_Color::RGBA8,
+            .format = gl::InternalFormat_Color::RGBA32F,
             .options = {
                 .minification_filter = gl::Filter::NearestNeighbour, // On va toujours afficher la texture à la taille de l'écran,
                 .magnification_filter = gl::Filter::NearestNeighbour, // donc les filtres n'auront pas d'effet. Tant qu'à faire on choisit le moins coûteux.
@@ -143,7 +147,20 @@ int main()
     }
     };
 
-
+    auto const rectangle_mask = gl::Mesh{ {
+        .vertex_buffers = {{
+            .layout = {gl::VertexAttribute::Position2D{0}},
+            .data = {
+                    -3.f, -3.f,
+                    +3.f, -3.f,
+                    +3.f, +3.f,
+                    -3.f, +3.f
+                },}},
+        .index_buffer = 
+        {
+            0, 1, 2,
+            0, 2, 3
+        }}};
   
 
 
@@ -168,35 +185,36 @@ int main()
     int i = 0;
     while (gl::window_is_open())
     {
-
-       // i++;
-       // if(i%5 == 0){
-        //shader.bind(); 
-        //shader.set_uniform("time", float(gl::time_in_seconds()));
-        //rectangle_mesh.draw(); 
-        //shaderMask.bind();
-        //rectangle_mask.draw();
-        //}
-
-
-
         render_target.render([&]() 
         {
-            glClearColor(.5f, .5f, .5f, 1.f); // Dessine du rouge, non pas à l'écran, mais sur notre render target
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            //glClearColor(.5f, .5f, .5f, 1.f); // Dessine du rouge, non pas à l'écran, mais sur notre render target
+            //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glm::mat4 const view_matrix = camera.view_matrix();
             glm::mat4 const projection_matrix = glm::infinitePerspective(1.f /*field of view in radians*/, gl::framebuffer_aspect_ratio() /*aspect ratio*/, 0.001f /*near plane*/);
+   /*         shader.bind();
+            shader.set_uniform("view_matrix", glm::mat4(projection_matrix* view_matrix));
+            shader.set_uniform("my_texture", texture);
+            cube_mesh.draw();*/
+
+            //Test
+            glClear(GL_DEPTH_BUFFER_BIT);
             shader.bind();
             shader.set_uniform("view_matrix", glm::mat4(projection_matrix* view_matrix));
             shader.set_uniform("my_texture", texture);
+            shader.set_uniform("time", float(gl::time_in_seconds()));
             cube_mesh.draw();
+            shader_fader.bind();
+            rectangle_mask.draw();
+
         });
 
-        glClearColor(0.f, 0.f, 1.f, 1.f); 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //glClearColor(1.f, 0.f, 0.f, 1.f); 
+        glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
         shader_camera.bind();
         shader_camera.set_uniform("my_texture", render_target.color_texture(0));
         shader_camera.set_uniform("time", float(gl::time_in_seconds()));
         camera_rect.draw();
     }
+
+
 }
