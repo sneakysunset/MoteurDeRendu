@@ -2,26 +2,17 @@
 
 layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec2 in_uv;
-vec2 pos = vec2(in_position.x + .4f, in_position.y + .4f);
-uniform float screen_ratio;
+layout(location = 2) in vec3 in_normal;
 uniform float time;
 uniform mat4 view_matrix;
+out vec3 pos;
 out vec2 uv;
-out vec3 vertex_position;
+out vec3 normal;
 void main()
 {
-    vertex_position = in_position;
-    
-    //vec2 pos = vec2(in_position.x  + cos(time) / 2, in_position.y + sin(time) / 2);
-    //pos.x /= screen_ratio;
-    //gl_Position = view_matrix * vec4(pos, 0., 1.);
+    pos = in_position;
     uv = in_uv ;
+    normal = in_normal;
 
-
-    
-    //uv.x = uv.x - .5;
-    //uv.x = abs(uv.x);
-    //uv.y = uv.y - .5;
-    //uv.y = abs(uv.y);
-    gl_Position = view_matrix * vec4(in_position.x + cos(time) / 2, in_position.y + sin(time) / 2, in_position.z, 1.);
+    gl_Position = view_matrix * vec4(in_position.x, in_position.y, in_position.z, 1.);
 }
