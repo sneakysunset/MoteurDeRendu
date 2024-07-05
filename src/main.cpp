@@ -3,7 +3,7 @@
 #include "glm/ext/matrix_clip_space.hpp"
 #include "../opengl-framework/lib/glfw/include/GLFW/glfw3.h"
 #include <iostream>
-
+#include <glm/gtc/matrix_transform.hpp>
 
 void Initialisation()
 {
@@ -228,16 +228,23 @@ int main()
     } };
     glm::vec3 directionlight_direction(.2, .3, -1.);
     float directionlight_intensity = 1;
-    glm::vec3 pointlight_origin(0, 0, 0);
-    float pointlight_intensity = .5;
+    glm::vec3 directionlight_color(1, 1, 1);
+    glm::vec3 pointlight_origin(0, .6, 0);
+    float pointlight_intensity = .7;
+    glm::vec3 pointlight_color_0(.1, .1, 1);
+    glm::vec3 pointlight_color_1(1, .1, .1);
     float ambiantlight_intensity = .1;
+    glm::vec3 ambiantlight_color(1, 1, 1);
     auto mesh = LoadMesh(gl::make_absolute_path("res/Model/fourareen.obj").generic_string());
     shader.bind();
     shader.set_uniform("directionlight_direction", directionlight_direction);
     shader.set_uniform("directionlight_intensity", directionlight_intensity);
+    shader.set_uniform("directionlight_color", directionlight_color);
     shader.set_uniform("pointlight_origin", pointlight_origin);
     shader.set_uniform("pointlight_intensity", pointlight_intensity);
+    shader.set_uniform("pointlight_color", pointlight_color_0);
     shader.set_uniform("ambiantlight_intensity", ambiantlight_intensity);
+    shader.set_uniform("ambiantlight_color", ambiantlight_color);
 
     auto cube_mesh = LoadCube(.1, pointlight_origin);
 
@@ -251,11 +258,19 @@ int main()
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             shader.bind();
             shader.set_uniform("my_texture", texture);
-            shader.set_uniform("view_matrix", projection_matrix* view_matrix);
+            glm::mat4 transform_matrix(1.0f);
+            transform_matrix = glm::rotate(transform_matrix, float(gl::time_in_seconds() / 3), glm::vec3(1.0f, 0.0f, 0.0f));
+            shader.set_uniform("view_matrix", view_matrix);
+            shader.set_uniform("transform_matrix", transform_matrix);
+            shader.set_uniform("projection_matrix", projection_matrix);
+            shader.set_uniform("time", float(gl::time_in_seconds()));
+            shader.set_uniform("pointlight_color", glm::mix(pointlight_color_0, pointlight_color_1, glm::sin((float)gl::time_in_seconds())));
+            shader.set_uniform("pointlight_intensity", glm::mix((float)0., pointlight_intensity, glm::sin((float)gl::time_in_seconds() * 2)));
             
 
             mesh.draw();
-            cube_mesh.draw();
+            //shader.set_uniform("transform_matrix", glm::mat4(1));
+            //cube_mesh.draw();
         });
 
         glClear(GL_DEPTH_BUFFER_BIT);
